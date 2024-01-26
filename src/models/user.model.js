@@ -34,7 +34,7 @@ const usersSchema = new Schema(
     },
     watchHistory: [
       {
-        type: Schema.types.ObjectId,
+        type: Schema.ObjectId,
         ref: "Video",
       },
     ],
@@ -51,18 +51,18 @@ const usersSchema = new Schema(
 
 usersSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
-    this.password = bcrypt.hash(this.password, 10);
+    this.password = await bcrypt.hash(this.password, 10);
     next();
   } else {
     next();
   }
 });
 
-userSchema.methods.isPasswordCorrect = async function (password) {
+usersSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateAccessToken = function () {
+usersSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
       _id: this._id,
@@ -77,7 +77,7 @@ userSchema.methods.generateAccessToken = function () {
   );
 };
 
-userSchema.methods.generateRefreshToken = function () {
+usersSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
       _id: this._id,
