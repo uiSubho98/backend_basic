@@ -5,12 +5,16 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const generateAccessAndRefreshToken = async (userId) => {
+  console.log({ userId });
   try {
     const user = await User.findById(userId);
     const accessToken = user.generateAccessToken(); // custom methods
     const refreshToken = user.generateRefreshToken(); // custom methods
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
+    console.log({ accessToken });
+    console.log({ refreshToken });
+    console.log({ user });
 
     return { accessToken, refreshToken };
   } catch (error) {
@@ -80,7 +84,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password, username } = req.body;
 
-  if (!username || !email) {
+  if (!username && !email) {
     throw new ApiError(400, "Username or Email is required");
   }
 
@@ -90,11 +94,11 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(400, "user is not registered");
   }
-  const isPasswordValid = await user.isPasswordCorrect(passowrd);
+  const isPasswordValid = await user.isPasswordCorrect(password);
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid user credentials");
   }
-
+  // console.log({ user });
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
   );
@@ -110,8 +114,8 @@ const loginUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refeshToken, options)
-    .josn(
+    .cookie("refreshToken", refreshToken, options)
+    .json(
       new ApiResponse(
         "200",
         {
